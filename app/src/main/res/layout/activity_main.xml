@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="10dp"
+        android:text="Recording Status: "
+        android:textAppearance="?android:attr/textAppearanceLarge"/>
+
+    <Switch
+        android:id="@+id/aswitch"
+        android:layout_width="91dp"
+        android:layout_height="42dp"
+        android:layout_below="@+id/textView"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="5dp"
+        android:checked="false"
+        android:splitTrack="false"
+        android:text="off"
+        android:thumbTint="@color/colorAccent"
+        tools:checked="false" />
+
+
+    <TextView
+        android:id="@+id/instructions_head"
+        android:layout_width="wrap_content"
+        android:layout_height="20dp"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="165dp"
+        android:layout_toStartOf="@+id/aswitch"
+        android:text="@string/instructions_head"
+        android:textColor="@color/colorAccent" />
+
+    <TextView
+        android:id="@+id/instructions"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/instructions_head"
+        android:maxLines="7"
+        android:text="@string/instructions" />
+
+
+
+
+</RelativeLayout>

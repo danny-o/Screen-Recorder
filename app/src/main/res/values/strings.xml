@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">ScreenRecorder</string>
+    <string name="action_open_videos">Recorded videos</string>
+    <string name="action_video_quality">Video Quality</string>
+    <string name="action_about">about</string>
+    <string name="instructions">- After toggling the switch on, do not press back button as this will\n
+                                  stop the screen recording\n
+                                  press home button instead \n
+                                - your video is in folder ScreenVideos in your sdcard or internal storage\n
+                                rate us 5 in play store &#128522;</string>
+    <string name="instructions_head">Instructions</string>
+    <string name="no_video_records">No videos recorded 😞 </string>
+    <string name="developer">Developer: DigitalSkies Inc.</string>
+    <string name="coder">All Coding By: Daniel Kimani</string>
+    <string name="delete">delete</string>
+    <string name="twitter_handle">\@danielnjorogeki</string>
+    <string name="facebook_username">Danny K Daniel</string>
+
+    <string name="label_permissions">Please enable Microphone and Storage permissions.</string>
+    <string name="Storage_permissions">Please enable storage permissions</string>
+    <string name="title_activity_ad">AdActivity</string>
+
+    <string name="action_settings">Settings</string>
+
+</resources>
+

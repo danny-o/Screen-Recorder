@@ -1,0 +1,21 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.screenrec.digitalskies.screenrec.MainActivity">
+    <item
+        android:id="@+id/action_open_videos"
+        android:orderInCategory="100"
+        android:title="@string/action_open_videos"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/select_video_qality"
+        android:orderInCategory="100"
+        android:title="@string/action_video_quality"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/about"
+        android:orderInCategory="100"
+        android:title="@string/action_about"
+        app:showAsAction="never" />
+
+</menu>
