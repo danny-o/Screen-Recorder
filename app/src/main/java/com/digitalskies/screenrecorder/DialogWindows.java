@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -93,8 +94,16 @@ public class DialogWindows extends DialogFragment {
                 public void onItemClick(AdapterView<?> parent, View view,
                                         int position, long id) {
 
-                    intent = new Intent(Intent.ACTION_VIEW, Uri.parse(Environment.getExternalStoragePublicDirectory("") + folder + "/" + fileList.get(position)));
-                    intent.setDataAndType(Uri.parse(Environment.getExternalStoragePublicDirectory("") + folder + "/" + fileList.get(position)), "video/mp4");
+                    File uri=null;
+                    if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.O_MR1){
+                        uri=requireActivity().getExternalFilesDir("/");
+                    }
+                    else{
+                        uri=Environment.getExternalStoragePublicDirectory("/");
+                    }
+
+                    intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri + folder + "/" + fileList.get(position)));
+                    intent.setDataAndType(Uri.parse(uri + folder + "/" + fileList.get(position)), "video/mp4");
                     startActivity(intent);
 
                     dismiss();

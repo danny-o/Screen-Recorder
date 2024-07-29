@@ -204,8 +204,15 @@ public class MainActivity extends AppCompatActivity {
                 /*Handler*/);
     }
 
-    public static void createDirectoryIfNonExists(String path) {
-        File myDir = new File(Environment.getExternalStoragePublicDirectory("/"), path);
+    public  void createDirectoryIfNonExists(String path) {
+        File uri=null;
+        if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.O_MR1){
+            uri=getExternalFilesDir("/");
+        }
+        else{
+            uri=Environment.getExternalStoragePublicDirectory("/");
+        }
+        File myDir = new File(uri, path);
         if (!myDir.exists()) {
             if (!myDir.mkdir()) {
             }
