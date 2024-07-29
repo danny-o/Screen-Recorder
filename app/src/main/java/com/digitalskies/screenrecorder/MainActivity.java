@@ -1,8 +1,6 @@
 package com.digitalskies.screenrecorder;
 
 import android.Manifest;
-import android.os.Build;
-import android.support.v4.app.FragmentManager;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -15,25 +13,27 @@ import android.media.MediaRecorder;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.SparseIntArray;
-import android.view.KeyEvent;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.Surface;
 import android.view.View;
 import android.widget.Switch;
 import android.widget.Toast;
-import android.view.Menu;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.FragmentManager;
+
+import com.google.android.material.snackbar.Snackbar;
 
 import java.io.File;
 import java.io.IOException;
@@ -124,21 +124,23 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        switch (id) {
-            case R.id.action_open_videos:
-                setId(R.layout.dialoglayout);
-                showDialog();
-                return true;
-            case R.id.about:
-                setId(R.layout.about);
-                showDialog();
-                return true;
-            case R.id.select_video_qality:
-                setId(R.layout.video_quality_selector);
-                showDialog();
-                return true;
 
+        if(id==R.id.action_open_videos){
+            setId(R.layout.dialoglayout);
+            showDialog();
+            return true;
         }
+        else if(id== R.id.about){
+            setId(R.layout.about);
+            showDialog();
+            return true;
+        }
+        else if(id==R.id.select_video_qality){
+            setId(R.layout.video_quality_selector);
+            showDialog();
+            return true;
+        }
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -149,7 +151,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if(requestCode==REQUEST_CODE&&resultCode==RESULT_OK){
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE && resultCode == RESULT_OK) {
             initRecorder();
             mMediaProjectionCallback = new MediaProjectionCallback();
             mMediaProjection = mProjectionManager.getMediaProjection(resultCode, data);
@@ -157,13 +160,10 @@ public class MainActivity extends AppCompatActivity {
             mVirtualDisplay = createVirtualDisplay();
             mMediaRecorder.start();
 
-        }
-        else if (requestCode != REQUEST_CODE) {
+        } else if (requestCode != REQUEST_CODE) {
             Log.e(TAG, "Unknown request code: " + requestCode);
             return;
-        }
-
-        else  {
+        } else {
             Toast.makeText(this,
                     "Screen Cast Permission Denied", Toast.LENGTH_SHORT).show();
             mMediaRecorder.reset();
@@ -302,6 +302,7 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String permissions[],
                                            @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
             case REQUEST_PERMISSIONS: {
                 if ((grantResults.length > 0) && (grantResults[0] +
@@ -323,7 +324,7 @@ public class MainActivity extends AppCompatActivity {
                                     startActivity(intent);
                                 }
                             }).show();
-                    permissionGranted=PackageManager.PERMISSION_DENIED;
+                    permissionGranted = PackageManager.PERMISSION_DENIED;
                 }
             }
         }

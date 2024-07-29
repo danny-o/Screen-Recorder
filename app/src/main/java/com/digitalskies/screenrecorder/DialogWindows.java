@@ -10,9 +10,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.support.annotation.NonNull;
-import android.support.v4.app.DialogFragment;
-import android.support.v7.widget.Toolbar;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
@@ -26,6 +23,10 @@ import android.widget.ListView;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.DialogFragment;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -80,70 +81,136 @@ public class DialogWindows extends DialogFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        switch (MainActivity.id) {
+        if(MainActivity.id==R.layout.dialoglayout){
+            v = inflater.inflate(R.layout.dialoglayout, container, false);
+            Toolbar toolbar = v.findViewById(R.id.dialog_toolbar);
+            toolbar.setTitle("Recorded Videos");
+            dialog_ListView = v.findViewById(R.id.dialoglist);
+            registerForContextMenu(dialog_ListView);
+            dialog_ListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
-            case R.layout.dialoglayout:
-                v = inflater.inflate(R.layout.dialoglayout, container, false);
-                Toolbar toolbar = v.findViewById(R.id.dialog_toolbar);
-                toolbar.setTitle("Recorded Videos");
-                dialog_ListView = v.findViewById(R.id.dialoglist);
-                registerForContextMenu(dialog_ListView);
-                dialog_ListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view,
+                                        int position, long id) {
 
-                    @Override
-                    public void onItemClick(AdapterView<?> parent, View view,
-                                            int position, long id) {
+                    intent = new Intent(Intent.ACTION_VIEW, Uri.parse(Environment.getExternalStoragePublicDirectory("") + folder + "/" + fileList.get(position)));
+                    intent.setDataAndType(Uri.parse(Environment.getExternalStoragePublicDirectory("") + folder + "/" + fileList.get(position)), "video/mp4");
+                    startActivity(intent);
 
-                        intent = new Intent(Intent.ACTION_VIEW, Uri.parse(Environment.getExternalStoragePublicDirectory("") + folder + "/" + fileList.get(position)));
-                        intent.setDataAndType(Uri.parse(Environment.getExternalStoragePublicDirectory("") + folder + "/" + fileList.get(position)), "video/mp4");
-                        startActivity(intent);
-
-                        dismiss();
+                    dismiss();
 
 
-                    }
-                });
-                return v;
-            case R.layout.about:
-                v = inflater.inflate(R.layout.about, container, false);
-                toolbar = v.findViewById(R.id.about_app_toolbar);
-                toolbar.setTitle("About app");
-                (v.findViewById(R.id.close)).setOnClickListener(new View.OnClickListener() {
-                    public void onClick(View v) {
-                        dismiss();
-                    }
-                });
-                return v;
-            case R.layout.video_quality_selector:
-                v = inflater.inflate(R.layout.video_quality_selector, container, false);
-                toolbar = v.findViewById(R.id.video_quality_toolbar);
-                toolbar.setTitle("Select Video Quality");
-                radioGroup = v.findViewById(R.id.RadioGroup);
-                radioGroup.check(checkedButton);
-                radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
-                    @Override
-                    public void onCheckedChanged(RadioGroup group, int checkedId) {
-                        SharedPreferences.Editor editor = sharedPreferences.edit();
-                        editor.putInt("CheckedId", checkedId);
-                        editor.apply();
-                        if (checkedId == R.id.high_quality) {
-                            setVideoEncodingBitrate(1200000);
-                        }
-                        if (checkedId == R.id.medium_quality) {
-                            setVideoEncodingBitrate(900000);
+                }
+            });
+            return v;
 
-                        }
-                        if (checkedId == R.id.low_quality) {
-                            setVideoEncodingBitrate(700000);
-                        }
-                    }
-                });
-                (v.findViewById(R.id.close)).setOnClickListener(new View.OnClickListener() {
-                    public void onClick(View v) {
-                        dismiss();
-                    }
-                });
         }
+        else if(MainActivity.id==R.layout.about){
+            v = inflater.inflate(R.layout.about, container, false);
+            Toolbar toolbar = v.findViewById(R.id.about_app_toolbar);
+            toolbar.setTitle("About app");
+            (v.findViewById(R.id.close)).setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    dismiss();
+                }
+            });
+            return v;
+        }
+        else if(MainActivity.id==R.layout.video_quality_selector){
+            v = inflater.inflate(R.layout.video_quality_selector, container, false);
+            Toolbar toolbar = v.findViewById(R.id.video_quality_toolbar);
+            toolbar.setTitle("Select Video Quality");
+            radioGroup = v.findViewById(R.id.RadioGroup);
+            radioGroup.check(checkedButton);
+            radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(RadioGroup group, int checkedId) {
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putInt("CheckedId", checkedId);
+                    editor.apply();
+                    if (checkedId == R.id.high_quality) {
+                        setVideoEncodingBitrate(1200000);
+                    }
+                    if (checkedId == R.id.medium_quality) {
+                        setVideoEncodingBitrate(900000);
+
+                    }
+                    if (checkedId == R.id.low_quality) {
+                        setVideoEncodingBitrate(700000);
+                    }
+                }
+            });
+            (v.findViewById(R.id.close)).setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    dismiss();
+                }
+            });
+        }
+
+//        switch (MainActivity.id) {
+//
+//            case R.layout.dialoglayout:
+//                v = inflater.inflate(R.layout.dialoglayout, container, false);
+//                Toolbar toolbar = v.findViewById(R.id.dialog_toolbar);
+//                toolbar.setTitle("Recorded Videos");
+//                dialog_ListView = v.findViewById(R.id.dialoglist);
+//                registerForContextMenu(dialog_ListView);
+//                dialog_ListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//
+//                    @Override
+//                    public void onItemClick(AdapterView<?> parent, View view,
+//                                            int position, long id) {
+//
+//                        intent = new Intent(Intent.ACTION_VIEW, Uri.parse(Environment.getExternalStoragePublicDirectory("") + folder + "/" + fileList.get(position)));
+//                        intent.setDataAndType(Uri.parse(Environment.getExternalStoragePublicDirectory("") + folder + "/" + fileList.get(position)), "video/mp4");
+//                        startActivity(intent);
+//
+//                        dismiss();
+//
+//
+//                    }
+//                });
+//                return v;
+//            case R.layout.about:
+//                v = inflater.inflate(R.layout.about, container, false);
+//                toolbar = v.findViewById(R.id.about_app_toolbar);
+//                toolbar.setTitle("About app");
+//                (v.findViewById(R.id.close)).setOnClickListener(new View.OnClickListener() {
+//                    public void onClick(View v) {
+//                        dismiss();
+//                    }
+//                });
+//                return v;
+//            case R.layout.video_quality_selector:
+//                v = inflater.inflate(R.layout.video_quality_selector, container, false);
+//                toolbar = v.findViewById(R.id.video_quality_toolbar);
+//                toolbar.setTitle("Select Video Quality");
+//                radioGroup = v.findViewById(R.id.RadioGroup);
+//                radioGroup.check(checkedButton);
+//                radioGroup.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+//                    @Override
+//                    public void onCheckedChanged(RadioGroup group, int checkedId) {
+//                        SharedPreferences.Editor editor = sharedPreferences.edit();
+//                        editor.putInt("CheckedId", checkedId);
+//                        editor.apply();
+//                        if (checkedId == R.id.high_quality) {
+//                            setVideoEncodingBitrate(1200000);
+//                        }
+//                        if (checkedId == R.id.medium_quality) {
+//                            setVideoEncodingBitrate(900000);
+//
+//                        }
+//                        if (checkedId == R.id.low_quality) {
+//                            setVideoEncodingBitrate(700000);
+//                        }
+//                    }
+//                });
+//                (v.findViewById(R.id.close)).setOnClickListener(new View.OnClickListener() {
+//                    public void onClick(View v) {
+//                        dismiss();
+//                    }
+//                });
+//        }
 
         return v;
     }
