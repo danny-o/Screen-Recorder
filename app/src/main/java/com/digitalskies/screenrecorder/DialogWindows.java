@@ -5,6 +5,7 @@ import android.app.Dialog;
 import android.content.ContentUris;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
@@ -27,6 +28,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.DialogFragment;
 
 import java.io.File;
@@ -97,14 +99,34 @@ public class DialogWindows extends DialogFragment {
                     File uri=null;
                     if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.O_MR1){
                         uri=requireActivity().getExternalFilesDir("/");
+//                        File file=new File( uri + "hhhhh" + "/" + fileList.get(position));
+//                        File imagePath = new File(requireActivity().getExternalFilesDir("/"), "ScreenVideos");
+                        File newFile = new File(uri + folder + "/" + fileList.get(position));
+                        Uri imageUri = MyFileProvider.getUriForFile(requireActivity(), "com.digitalskies.screenrecorder.provider" ,newFile);
+
+//                        imageUri=Uri.parse(uri + folder + "/" + fileList.get(position));
+                        requireActivity().grantUriPermission(requireActivity().getPackageName(), imageUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+                        intent = new Intent(Intent.ACTION_VIEW, imageUri);
+                        intent.setDataAndType(imageUri, "video/mp4");
+                        intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+
+                        startActivity(intent);
                     }
                     else{
                         uri=Environment.getExternalStoragePublicDirectory("/");
-                    }
 
-                    intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri + folder + "/" + fileList.get(position)));
-                    intent.setDataAndType(Uri.parse(uri + folder + "/" + fileList.get(position)), "video/mp4");
-                    startActivity(intent);
+                        intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri + folder + "/" + fileList.get(position)));
+                        intent.setDataAndType(Uri.parse(uri + folder + "/" + fileList.get(position)), "video/mp4");
+                        startActivity(intent);
+                    }
+//                    Uri fileUri=Uri.parse(uri + folder + "/" + fileList.get(position));
+//
+//                    Uri imageUri = FileProvider.getUriForFile(requireActivity(), "com.example.homefolder.example.provider" ,fileUri);
+//
+//                    intent = new Intent(Intent.ACTION_VIEW, Uri.parse(uri + folder + "/" + fileList.get(position)));
+//                    intent.setDataAndType(Uri.parse(uri + folder + "/" + fileList.get(position)), "video/mp4");
+//                    startActivity(intent);
 
                     dismiss();
 
@@ -256,9 +278,22 @@ public class DialogWindows extends DialogFragment {
         AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuItem.getMenuInfo();
         boolean del;
         final int position = info.position;
+
+        File file;
+        String path;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            path=requireActivity().getExternalFilesDir("")+ folder + "/" + fileList.get(position);
+
+        } else {
+            path=Environment.getExternalStoragePublicDirectory("") + folder + "/" + fileList.get(position);
+        }
+        file = new File(path);;
         if (menuItem.getItemId() == R.id.delete) {
-            File file = new File(Environment.getExternalStoragePublicDirectory("") + folder + "/" + fileList.get(position));
-            requireActivity().getContentResolver().delete(getMediaUri(Environment.getExternalStoragePublicDirectory("") + folder + "/" + fileList.get(position)),null,null);
+            Uri videUri=getMediaUri(path);
+            if(videUri!=null){
+                requireActivity().getContentResolver().delete(getMediaUri(path),null,null);
+            }
             directoryList.remove(directoryList.getItem(info.position));
             del = file.delete();
             Toast.makeText(getActivity(), "file deleted", Toast.LENGTH_SHORT).show();
@@ -266,8 +301,8 @@ public class DialogWindows extends DialogFragment {
         } else {
             intent = new Intent(Intent.ACTION_SEND);
             intent.setType("video/*");
-            File videoToShare = new File(Environment.getExternalStoragePublicDirectory("") + folder + "/" + fileList.get(position));
-            Uri uri = Uri.fromFile(videoToShare);
+
+            Uri uri = Uri.fromFile(file);
             intent.putExtra(Intent.EXTRA_STREAM, uri);
             intent.putExtra(Intent.EXTRA_SUBJECT, "MY SCREENVIDEO");
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
@@ -280,18 +315,20 @@ public class DialogWindows extends DialogFragment {
     }
 
     void listDir(String path) {
-        File f = new File(Environment.getExternalStoragePublicDirectory("") + path);
+        File f = null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            f = new File(requireActivity().getExternalFilesDir("")+path);
+        } else {
+            f =new File(Environment.getExternalStoragePublicDirectory("") + path);
+        }
+
+
 
         curFolder = f;
 
         File[] files = f.listFiles();
         fileList.clear();
-        if (files.length == 0) {
-            textView.setText(R.string.no_video_records);
-            textView.setVisibility(View.VISIBLE);
-            Toast.makeText(getActivity(),"No video records",Toast.LENGTH_SHORT).show();
-
-        } else {
+        if(files!=null && files.length>0){
             for (File file : files) {
                 fileList.add(file.getName());
             }
@@ -299,6 +336,13 @@ public class DialogWindows extends DialogFragment {
             directoryList
                     = new ArrayAdapter<>(requireActivity(), R.layout.mylist, R.id.file_name, fileList);
             dialog_ListView.setAdapter(directoryList);
+
+        }
+        else {
+            textView.setText(R.string.no_video_records);
+            textView.setVisibility(View.VISIBLE);
+            Toast.makeText(getActivity(),"No video records",Toast.LENGTH_SHORT).show();
+
         }
 
 
@@ -312,6 +356,9 @@ public class DialogWindows extends DialogFragment {
         cursor.moveToFirst();
 
         int columnIndex=cursor.getColumnIndex(projection[0]);
+        if(columnIndex==0){
+            return null;
+        }
         videoId=cursor.getLong(columnIndex);
         cursor.close();
         return ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI,videoId);

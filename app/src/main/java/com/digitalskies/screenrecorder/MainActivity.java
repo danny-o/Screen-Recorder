@@ -1,6 +1,8 @@
 package com.digitalskies.screenrecorder;
 
 import android.Manifest;
+import android.app.Activity;
+import android.app.Notification;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -27,9 +29,12 @@ import android.view.View;
 import android.widget.Switch;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentManager;
 
@@ -37,6 +42,7 @@ import com.google.android.material.snackbar.Snackbar;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -64,9 +70,11 @@ public class MainActivity extends AppCompatActivity {
     public static Context context;
     FragmentManager fm = getSupportFragmentManager();
     public static ContentValues values;
-    public int permissionGranted=PackageManager.PERMISSION_DENIED;
+    public int permissionGranted = PackageManager.PERMISSION_DENIED;
     Integer integer;
     File videoFile;
+
+    ActivityResultLauncher<Intent> startMediaProjection;
 
 
     static {
@@ -83,30 +91,53 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
+
+//        if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.O_MR1){
+//            File uri=getExternalFilesDir("/");
+//            File newFile = new File(uri + "/"+folder  );
+//            Uri imageUri = MyFileProvider.getUriForFile(this, "com.digitalskies.screenrecorder.provider" ,newFile);
+//            grantUriPermission(getPackageName(),imageUri,Intent.FLAG_GRANT_READ_URI_PERMISSION);
+//
+//        }
+
         mScreenDensity = metrics.densityDpi;
 
         mMediaRecorder = new MediaRecorder();
 
         mProjectionManager = (MediaProjectionManager) getSystemService
                 (Context.MEDIA_PROJECTION_SERVICE);
-        integer=Build.VERSION.SDK_INT;
+        integer = Build.VERSION.SDK_INT;
 
         aSwitch = findViewById(R.id.aswitch);
 
+       startMediaProjection = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK) {
+                        Intent serviceIntent = new Intent(this, ScreenCaprure.class);
+                        serviceIntent.putExtra(ScreenCaprure.EXTRA_RESULT_CODE, result.getResultCode());
+                        serviceIntent.putExtra(ScreenCaprure.EXTRA_DATA, result.getData());
+                        startService(serviceIntent);
+                    }
+                }
+        );
 
-            requestPermissions();
+
+        requestPermissions();
 
 
         aSwitch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                requestPermissions();
-                if(permissionGranted==PackageManager.PERMISSION_GRANTED){
-                    onSwitchScreenShare(v);
-                }
-                else{
-                    switchChecked(false);
-                }
+//                if(((Switch)v).isChecked()){
+                    requestPermissions();
+                    if (permissionGranted == PackageManager.PERMISSION_GRANTED) {
+                        onSwitchScreenShare(v);
+                    } else {
+                        switchChecked(false);
+                    }
+//                }
+
 
             }
         });
@@ -125,17 +156,15 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
-        if(id==R.id.action_open_videos){
+        if (id == R.id.action_open_videos) {
             setId(R.layout.dialoglayout);
             showDialog();
             return true;
-        }
-        else if(id== R.id.about){
+        } else if (id == R.id.about) {
             setId(R.layout.about);
             showDialog();
             return true;
-        }
-        else if(id==R.id.select_video_qality){
+        } else if (id == R.id.select_video_qality) {
             setId(R.layout.video_quality_selector);
             showDialog();
             return true;
@@ -153,12 +182,18 @@ public class MainActivity extends AppCompatActivity {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_CODE && resultCode == RESULT_OK) {
-            initRecorder();
-            mMediaProjectionCallback = new MediaProjectionCallback();
-            mMediaProjection = mProjectionManager.getMediaProjection(resultCode, data);
-            mMediaProjection.registerCallback(mMediaProjectionCallback, null);
-            mVirtualDisplay = createVirtualDisplay();
-            mMediaRecorder.start();
+//            initRecorder();
+//            mMediaProjectionCallback = new MediaProjectionCallback();
+//            startForegroundService(new Intent(this,ScreenCaprure.class));
+//            mMediaProjection = mProjectionManager.getMediaProjection(resultCode, data);
+//            mMediaProjection.registerCallback(mMediaProjectionCallback, null);
+//            mVirtualDisplay = createVirtualDisplay();
+//            mMediaRecorder.start();
+
+            Intent serviceIntent = new Intent(this, ScreenCaprure.class);
+            serviceIntent.putExtra(ScreenCaprure.EXTRA_RESULT_CODE, resultCode);
+            serviceIntent.putExtra(ScreenCaprure.EXTRA_DATA, data);
+            startService(serviceIntent);
 
         } else if (requestCode != REQUEST_CODE) {
             Log.e(TAG, "Unknown request code: " + requestCode);
@@ -179,21 +214,29 @@ public class MainActivity extends AppCompatActivity {
             shareScreen();
         } else {
             switchChecked(false);
-            mMediaRecorder.stop();
-            mMediaRecorder.reset();
-            sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,Uri.fromFile(videoFile)));
-            Log.v(TAG, "Stopping Recording");
-            stopScreenSharing();
+
+
+//            sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(videoFile)));
+//            Log.v(TAG, "Stopping Recording");
+            Intent intent = new Intent(this, ScreenCaprure.class);
+            intent.setAction(ScreenCaprure.ACTION_STOP_FOREGROUND_SERVICE);
+            startService(intent);
         }
     }
 
     private void shareScreen() {
-        if (mMediaProjection == null) {
-            startActivityForResult(mProjectionManager.createScreenCaptureIntent(), REQUEST_CODE);
-            return;
-        }
-                mVirtualDisplay = createVirtualDisplay();
-                mMediaRecorder.start();
+//        startActivityForResult(mProjectionManager.createScreenCaptureIntent(), REQUEST_CODE);
+
+
+
+
+        startMediaProjection.launch(mProjectionManager.createScreenCaptureIntent());
+//        if (mMediaProjection == null) {
+//            startActivityForResult(mProjectionManager.createScreenCaptureIntent(), REQUEST_CODE);
+//            return;
+//        }
+//        mVirtualDisplay = createVirtualDisplay();
+//        mMediaRecorder.start();
     }
 
     private VirtualDisplay createVirtualDisplay() {
@@ -204,13 +247,12 @@ public class MainActivity extends AppCompatActivity {
                 /*Handler*/);
     }
 
-    public  void createDirectoryIfNonExists(String path) {
-        File uri=null;
-        if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.O_MR1){
-            uri=getExternalFilesDir("/");
-        }
-        else{
-            uri=Environment.getExternalStoragePublicDirectory("/");
+    public void createDirectoryIfNonExists(String path) {
+        File uri = null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            uri = getExternalFilesDir("/");
+        } else {
+            uri = Environment.getExternalStoragePublicDirectory("/");
         }
         File myDir = new File(uri, path);
         if (!myDir.exists()) {
@@ -227,7 +269,13 @@ public class MainActivity extends AppCompatActivity {
 
     private void initRecorder() {
         createDirectoryIfNonExists(folder);
-        exists = new File(Environment.getExternalStoragePublicDirectory(dir), videoName + ".mp4");
+        File uri = null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+            uri = getExternalFilesDir("/");
+        } else {
+            uri = Environment.getExternalStoragePublicDirectory("/");
+        }
+        exists = new File(uri, videoName + ".mp4");
         if (exists.exists()) {
             count++;
             videoName = "/ScreenVideo_" + count.toString();
@@ -239,7 +287,7 @@ public class MainActivity extends AppCompatActivity {
             mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
             mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
             mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-            mMediaRecorder.setOutputFile(Environment.getExternalStoragePublicDirectory(dir) + videoName + ".mp4");
+            mMediaRecorder.setOutputFile(uri+ videoName + ".mp4");
             mMediaRecorder.setVideoSize(DISPLAY_WIDTH, DISPLAY_HEIGHT);
             mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
             mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
@@ -249,7 +297,15 @@ public class MainActivity extends AppCompatActivity {
             int orientation = ORIENTATIONS.get(rotation + 90);
             mMediaRecorder.setOrientationHint(orientation);
             mMediaRecorder.prepare();
-            videoFile=new File(Environment.getExternalStoragePublicDirectory(dir) + videoName + ".mp4");
+            File fileOutput;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+                fileOutput = getExternalFilesDir(dir);
+            } else {
+                fileOutput = Environment.getExternalStoragePublicDirectory(dir);
+            }
+
+
+            videoFile = new File(fileOutput + videoName + ".mp4");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -285,9 +341,9 @@ public class MainActivity extends AppCompatActivity {
         if (aSwitch.isChecked()) {
             Toast.makeText(this,
                     "you pressed back button, screen recording stopped", Toast.LENGTH_LONG).show();
-            Log.d(TAG,"ACTIVITY DESTROYED MEDIA RECORDING STOPPED!!!!!");
+            Log.d(TAG, "ACTIVITY DESTROYED MEDIA RECORDING STOPPED!!!!!");
             mMediaRecorder.reset();
-            sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE,Uri.fromFile(videoFile)));
+            sendBroadcast(new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE, Uri.fromFile(videoFile)));
             switchChecked(false);
 
 
@@ -310,11 +366,15 @@ public class MainActivity extends AppCompatActivity {
                                            @NonNull String permissions[],
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        switch (requestCode) {
-            case REQUEST_PERMISSIONS: {
-                if ((grantResults.length > 0) && (grantResults[0] +
-                        grantResults[1]) != PackageManager.PERMISSION_GRANTED) {
+        if (requestCode == REQUEST_PERMISSIONS) {
+            if (grantResults.length > 0) {
 
+                int granted = grantResults[0];
+                if (grantResults.length > 1) {
+                    granted += grantResults[1];
+                }
+
+                if (granted != PackageManager.PERMISSION_GRANTED) {
                     aSwitch.setChecked(false);
                     Snackbar.make(findViewById(android.R.id.content), R.string.label_permissions,
                             Snackbar.LENGTH_INDEFINITE).setAction("ENABLE",
@@ -333,6 +393,8 @@ public class MainActivity extends AppCompatActivity {
                             }).show();
                     permissionGranted = PackageManager.PERMISSION_DENIED;
                 }
+
+
             }
         }
     }
@@ -363,46 +425,56 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
-    public void requestPermissions(){
-            if (ContextCompat.checkSelfPermission(MainActivity.this,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE) + ContextCompat
-                    .checkSelfPermission(MainActivity.this,
-                            Manifest.permission.RECORD_AUDIO)
-                    != PackageManager.PERMISSION_GRANTED) {
-                    if (ActivityCompat.shouldShowRequestPermissionRationale
-                            (MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) ||
-                            ActivityCompat.shouldShowRequestPermissionRationale
-                                    (MainActivity.this, Manifest.permission.RECORD_AUDIO)) {
 
-                        Snackbar.make(findViewById(android.R.id.content), R.string.label_permissions,
-                                Snackbar.LENGTH_INDEFINITE).setAction("ENABLE",
-                                new View.OnClickListener() {
-                                    @Override
-                                    public void onClick(View v) {
-                                        ActivityCompat.requestPermissions(MainActivity.this,
-                                                new String[]{Manifest.permission
-                                                        .WRITE_EXTERNAL_STORAGE, Manifest.permission.RECORD_AUDIO},
-                                                REQUEST_PERMISSIONS);
-                                    }
-                                }).show();
+    public void requestPermissions() {
+
+        ArrayList<String> permissions = new ArrayList<String>();
+        permissions.add(Manifest.permission.RECORD_AUDIO);
+        int permissionStatus = ContextCompat
+                .checkSelfPermission(this,
+                        Manifest.permission.RECORD_AUDIO);
+        boolean shouldShowRationale=   ActivityCompat.shouldShowRequestPermissionRationale
+                (MainActivity.this, Manifest.permission.RECORD_AUDIO);
 
 
-                    }
-                else {
-                    ActivityCompat.requestPermissions(MainActivity.this,
-                            new String[]{Manifest.permission
-                                    .WRITE_EXTERNAL_STORAGE, Manifest.permission.RECORD_AUDIO},
-                            REQUEST_PERMISSIONS);
-                }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O_MR1) {
+            permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            permissionStatus += ContextCompat
+                    .checkSelfPermission(this,
+                            Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            shouldShowRationale=ActivityCompat.shouldShowRequestPermissionRationale
+                    (MainActivity.this, Manifest.permission.RECORD_AUDIO) || ActivityCompat.shouldShowRequestPermissionRationale
+                    (MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        }
+        if (permissionStatus != PackageManager.PERMISSION_GRANTED) {
+            if (shouldShowRationale) {
+
+                Snackbar.make(findViewById(android.R.id.content), R.string.label_permissions,
+                        Snackbar.LENGTH_INDEFINITE).setAction("ENABLE",
+                        new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                ActivityCompat.requestPermissions(MainActivity.this,
+                                        permissions.toArray(new String[0]),
+                                        REQUEST_PERMISSIONS);
+                            }
+                        }).show();
+
+
+            } else {
+
+                String[] pm= permissions.toArray(new String[0]);
+
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        pm,
+                        REQUEST_PERMISSIONS);
             }
-
-        else{
-            permissionGranted=PackageManager.PERMISSION_GRANTED;
+        } else {
+            permissionGranted = PackageManager.PERMISSION_GRANTED;
         }
 
 
     }
-
 
 
 }
