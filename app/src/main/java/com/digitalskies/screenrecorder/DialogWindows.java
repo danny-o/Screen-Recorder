@@ -140,11 +140,7 @@ public class DialogWindows extends DialogFragment {
             v = inflater.inflate(R.layout.about, container, false);
             Toolbar toolbar = v.findViewById(R.id.about_app_toolbar);
             toolbar.setTitle("About app");
-            (v.findViewById(R.id.close)).setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    dismiss();
-                }
-            });
+            (v.findViewById(R.id.close)).setOnClickListener(v -> dismiss());
             return v;
         }
         else if(MainActivity.id==R.layout.video_quality_selector){

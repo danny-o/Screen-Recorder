@@ -67,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
     Integer count = 0;
     String videoName = "/ScreenVideo";
     File exists;
-    public static Context context;
+//    public static Context context;
     FragmentManager fm = getSupportFragmentManager();
     public static ContentValues values;
     public int permissionGranted = PackageManager.PERMISSION_DENIED;
@@ -118,6 +118,9 @@ public class MainActivity extends AppCompatActivity {
                         serviceIntent.putExtra(ScreenCaprure.EXTRA_RESULT_CODE, result.getResultCode());
                         serviceIntent.putExtra(ScreenCaprure.EXTRA_DATA, result.getData());
                         startService(serviceIntent);
+                    }
+                    else{
+                        switchChecked(false);
                     }
                 }
         );
@@ -262,7 +265,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void showDialog() {
-        context = MainActivity.this;
         DialogWindows dialogWindows = new DialogWindows();
         dialogWindows.show(fm, "about");
     }

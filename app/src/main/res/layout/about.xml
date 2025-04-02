@@ -6,7 +6,7 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content">
 
-    <Toolbar
+    <androidx.appcompat.widget.Toolbar
         android:id="@+id/about_app_toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
