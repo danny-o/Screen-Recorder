@@ -7,6 +7,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.hardware.display.DisplayManager;
@@ -36,6 +37,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.FragmentManager;
 
 import com.google.android.material.snackbar.Snackbar;
@@ -67,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
     Integer count = 0;
     String videoName = "/ScreenVideo";
     File exists;
-//    public static Context context;
+    //    public static Context context;
     FragmentManager fm = getSupportFragmentManager();
     public static ContentValues values;
     public int permissionGranted = PackageManager.PERMISSION_DENIED;
@@ -86,19 +91,20 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         super.onCreate(savedInstanceState);
         createDirectoryIfNonExists(folder);
         setContentView(R.layout.activity_main);
+
+
+        int nightModeFlags = getResources().getConfiguration().uiMode + Configuration.UI_MODE_NIGHT_MASK;
+
+        WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView()).setAppearanceLightStatusBars(nightModeFlags != Configuration.UI_MODE_NIGHT_YES);
+
+
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
-
-//        if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.O_MR1){
-//            File uri=getExternalFilesDir("/");
-//            File newFile = new File(uri + "/"+folder  );
-//            Uri imageUri = MyFileProvider.getUriForFile(this, "com.digitalskies.screenrecorder.provider" ,newFile);
-//            grantUriPermission(getPackageName(),imageUri,Intent.FLAG_GRANT_READ_URI_PERMISSION);
-//
-//        }
 
         mScreenDensity = metrics.densityDpi;
 
@@ -110,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
 
         aSwitch = findViewById(R.id.aswitch);
 
-       startMediaProjection = registerForActivityResult(
+        startMediaProjection = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     if (result.getResultCode() == Activity.RESULT_OK) {
@@ -118,8 +124,7 @@ public class MainActivity extends AppCompatActivity {
                         serviceIntent.putExtra(ScreenCaprure.EXTRA_RESULT_CODE, result.getResultCode());
                         serviceIntent.putExtra(ScreenCaprure.EXTRA_DATA, result.getData());
                         startService(serviceIntent);
-                    }
-                    else{
+                    } else {
                         switchChecked(false);
                     }
                 }
@@ -133,12 +138,12 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
 //                if(((Switch)v).isChecked()){
-                    requestPermissions();
-                    if (permissionGranted == PackageManager.PERMISSION_GRANTED) {
-                        onSwitchScreenShare(v);
-                    } else {
-                        switchChecked(false);
-                    }
+                requestPermissions();
+                if (permissionGranted == PackageManager.PERMISSION_GRANTED) {
+                    onSwitchScreenShare(v);
+                } else {
+                    switchChecked(false);
+                }
 //                }
 
 
@@ -231,8 +236,6 @@ public class MainActivity extends AppCompatActivity {
 //        startActivityForResult(mProjectionManager.createScreenCaptureIntent(), REQUEST_CODE);
 
 
-
-
         startMediaProjection.launch(mProjectionManager.createScreenCaptureIntent());
 //        if (mMediaProjection == null) {
 //            startActivityForResult(mProjectionManager.createScreenCaptureIntent(), REQUEST_CODE);
@@ -289,7 +292,7 @@ public class MainActivity extends AppCompatActivity {
             mMediaRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
             mMediaRecorder.setVideoSource(MediaRecorder.VideoSource.SURFACE);
             mMediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-            mMediaRecorder.setOutputFile(uri+ videoName + ".mp4");
+            mMediaRecorder.setOutputFile(uri + videoName + ".mp4");
             mMediaRecorder.setVideoSize(DISPLAY_WIDTH, DISPLAY_HEIGHT);
             mMediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
             mMediaRecorder.setAudioEncoder(MediaRecorder.AudioEncoder.AMR_NB);
@@ -435,7 +438,7 @@ public class MainActivity extends AppCompatActivity {
         int permissionStatus = ContextCompat
                 .checkSelfPermission(this,
                         Manifest.permission.RECORD_AUDIO);
-        boolean shouldShowRationale=   ActivityCompat.shouldShowRequestPermissionRationale
+        boolean shouldShowRationale = ActivityCompat.shouldShowRequestPermissionRationale
                 (MainActivity.this, Manifest.permission.RECORD_AUDIO);
 
 
@@ -444,7 +447,7 @@ public class MainActivity extends AppCompatActivity {
             permissionStatus += ContextCompat
                     .checkSelfPermission(this,
                             Manifest.permission.WRITE_EXTERNAL_STORAGE);
-            shouldShowRationale=ActivityCompat.shouldShowRequestPermissionRationale
+            shouldShowRationale = ActivityCompat.shouldShowRequestPermissionRationale
                     (MainActivity.this, Manifest.permission.RECORD_AUDIO) || ActivityCompat.shouldShowRequestPermissionRationale
                     (MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
         }
@@ -465,7 +468,7 @@ public class MainActivity extends AppCompatActivity {
 
             } else {
 
-                String[] pm= permissions.toArray(new String[0]);
+                String[] pm = permissions.toArray(new String[0]);
 
                 ActivityCompat.requestPermissions(MainActivity.this,
                         pm,
